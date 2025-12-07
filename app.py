@@ -5,7 +5,7 @@ import string
 import spacy
 import nltk
 from nltk.corpus import stopwords
-
+import os
 # -----------------------------
 # Download required NLTK data
 # -----------------------------
@@ -102,5 +102,8 @@ def predict():
 # -----------------------------
 # Run app
 # -----------------------------
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    # The important part is host='0.0.0.0'
+    # Also, use the PORT environment variable provided by Railway
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
