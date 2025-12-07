@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Complaint Classifier</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --accent-color: #ec4899;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --dark-color: #0f172a;
+            --light-bg: #f8fafc;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 90%, rgba(139, 92, 246, 0.3) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .container { 
+            max-width: 900px; 
+            margin: 3rem auto; 
+            position: relative;
+            z-index: 1;
+            padding: 0 20px;
+        }
+        
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            transition: all 0.3s ease;
+        }
+        
+        .main-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 3rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: shimmer 8s infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+        }
+        
+        .card-header h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.5rem;
+            position: relative;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .card-header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.1rem;
+            position: relative;
+        }
+        
+        .header-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .card-body { 
+            padding: 3rem 2.5rem; 
+            background: white;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .form-control {
+            border-radius: 15px;
+            padding: 1rem 1.25rem;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            background: #f8fafc;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            background: white;
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            padding: 1rem 3rem;
+            border-radius: 15px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+            position: relative;
+            overflow: hidden;
+            color: white;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(-1px);
+        }
+        
+        .btn-outline-primary {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            background: transparent;
+            padding: 0.75rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-primary:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+        }
+        
+        #result { 
+            display: none; 
+            animation: slideUp 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px) scale(0.95);
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-top: 2rem;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .result-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .topic-icon-wrapper {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .topic-icon {
+            font-size: 2.5rem;
+            color: white;
+        }
+        
+        .badge {
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+            color: white;
+        }
+        
+        .alert-info {
+            background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+            border: 2px solid #93c5fd;
+            border-radius: 15px;
+            padding: 1.5rem;
+            color: #1e40af;
+            font-weight: 500;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            border-width: 4px;
+            border-color: var(--primary-color);
+            border-right-color: transparent;
+        }
+        
+        .loading p {
+            margin-top: 1rem;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem;
+            color: white;
+            font-weight: 500;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .footer p {
+            margin: 0;
+            font-size: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .card-header h2 { font-size: 1.8rem; }
+            .card-body { padding: 2rem 1.5rem; }
+            .header-icon { font-size: 3rem; }
+            .topic-icon-wrapper { width: 80px; height: 80px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <div class="main-card">
+                <div class="card-header">
+                    <div class="header-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h2>AI Complaint Classifier</h2>
+                    <p>Intelligent categorization powered by machine learning</p>
+                </div>
+                <div class="card-body">
+                    <form id="complaintForm">
+                        <div class="mb-4">
+                            <label for="complaintText" class="form-label">
+                                <i class="fas fa-comment-alt"></i>
+                                Describe Your Issue
+                            </label>
+                            <textarea 
+                                class="form-control" 
+                                id="complaintText" 
+                                rows="6" 
+                                placeholder="Tell us what happened... (e.g., I'm having issues with my credit card payment, unauthorized charges appeared on my account...)" 
+                                required
+                            ></textarea>
+                        </div>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-magic me-2"></i>Classify My Complaint
+                            </button>
+                        </div>
+                        <div class="loading" id="loading">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="mt-2 mb-0">Analyzing your complaint...</p>
+                        </div>
+                    </form>
+
+                    <div id="result">
+                        <div class="result-card">
+                            <div class="text-center mb-4">
+                                <div class="topic-icon-wrapper" id="topicIconWrapper">
+                                    <div class="topic-icon" id="topicIcon">
+                                        <i class="fas fa-tag"></i>
+                                    </div>
+                                </div>
+                                <h3 style="font-weight: 700; color: #0f172a;">Classification Result</h3>
+                            </div>
+                            <div class="row align-items-center mb-4">
+                                <div class="col-md-4 fw-bold" style="color: #475569; font-size: 1.1rem;">
+                                    <i class="fas fa-tags me-2"></i>Category:
+                                </div>
+                                <div class="col-md-8">
+                                    <span id="prediction" class="badge">Unknown</span>
+                                </div>
+                            </div>
+                            <div class="alert alert-info" role="alert">
+                                <i class="fas fa-lightbulb me-2"></i>
+                                <strong>Our Recommendation:</strong><br>
+                                <span id="suggestion">Based on our analysis, this appears to be a general complaint.</span>
+                            </div>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button class="btn btn-outline-primary" onclick="resetForm()">
+                                <i class="fas fa-plus-circle me-2"></i>Analyze Another Complaint
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p><i class="fas fa-code me-2"></i>© 2025 AI Complaint Classifier | Crafted with ❤️ by Waqas Ramzan</p>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const categorySuggestions = {
+        "Bank Account services": "This appears to be related to a bank account issue. We'll forward this to our banking support team.",
+        "Credit card or prepaid card": "We've identified this as a credit card related issue. Our team will review your complaint about the card services.",
+        "Mortgage/Loan": "This seems to be about mortgage or loan services. Our mortgage/loan department will assist you.",
+        "Theft/Dispute Reporting": "We've categorized this as a theft or dispute reporting complaint. Our team will investigate the issue.",
+        "Others": "We've received your complaint. Our support team will review it and get back to you soon.",
+        "Unknown": "We're processing your complaint. Our team will review it and respond as soon as possible."
+    };
+
+    const categoryIcons = {
+        "Bank Account services": "fa-university",
+        "Credit card or prepaid card": "fa-credit-card",
+        "Mortgage/Loan": "fa-home",
+        "Theft/Dispute Reporting": "fa-shield-alt",
+        "Others": "fa-comment-dots",
+        "Unknown": "fa-question-circle"
+    };
+
+    // Category-specific gradient colors
+    const categoryColors = {
+        "Bank Account services": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+        "Credit card or prepaid card": "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
+        "Mortgage/Loan": "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)",
+        "Theft/Dispute Reporting": "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
+        "Others": "linear-gradient(135deg, #30cfd0 0%, #330867 100%)",
+        "Unknown": "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)"
+    };
+
+    $(document).ready(function() {
+        $('#complaintForm').on('submit', function(e) {
+            e.preventDefault();
+            
+            const complaint = $('#complaintText').val().trim();
+            if (!complaint) return;
+
+            $('#loading').show();
+            $('#result').hide();
+            $('button[type="submit"]').prop('disabled', true);
+
+            $.ajax({
+                type: 'POST',
+                url: '/predict',
+                data: { complaint: complaint },
+                success: function(response) {
+                    if (response.success) {
+                        const topic = response.topic;
+                        
+                        $('#prediction').text(topic);
+                        $('#suggestion').text(categorySuggestions[topic] || categorySuggestions["Unknown"]);
+                        
+                        $('#topicIcon i').attr('class', 'fas ' + (categoryIcons[topic] || 'fa-question-circle'));
+                        
+                        const gradient = categoryColors[topic] || categoryColors["Unknown"];
+                        $('#topicIconWrapper').css('background', gradient);
+                        $('#prediction').css('background', gradient);
+                        
+                        $('#result').fadeIn();
+                    } else {
+                        alert('Error: ' + response.error);
+                    }
+                },
+                error: function() {
+                    alert('An error occurred while processing your request. Please try again.');
+                },
+                complete: function() {
+                    $('button[type="submit"]').prop('disabled', false);
+                    $('#loading').hide();
+                }
+            });
+        });
+    });
+
+    function resetForm() {
+        $('#complaintForm')[0].reset();
+        $('#result').fadeOut(400, function() {
+            $('#complaintText').focus();
+        });
+    }
+</script>
+</body>
+</html>
